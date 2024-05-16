@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+{% if user.is_authenticated %}
+    <div class="avatar-menu">
+        <img src="{{ user.avatar.url }}" alt="Avatar">
+        <div class="dropdown-content">
+            <a href="#">Account</a>
+            <a href="{% url 'logout' %}">Logout</a>
+        </div>
+    </div>
+{% else %}
+    <div class="avatar-menu">
+        <a href="{% url 'login_user' %}">Sign In</a>
+        <a href="{% url 'register_user' %}">Sign Up</a>
+    </div>
+{% endif %}
+</body>
+</html>
