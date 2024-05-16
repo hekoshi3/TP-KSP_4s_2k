@@ -1,4 +1,4 @@
 @echo off
 
-../.venv/Scripts/activate
+cd .. & cd .venv/Scripts/ & activate & cd .. & cd .. & cd myproject
 py -3 manage.py runserver
