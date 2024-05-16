@@ -3,11 +3,31 @@
 <head>
     <title>Image Generation</title>
     <style>
+        /* Ваши стили */
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            align-items: center;
+        }
+        .navbar {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            background-color: #333;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .navbar a {
+            color: white;
+            padding: 14px 20px;
+            text-decoration: none;
+            text-align: center;
+        }
+        .navbar a:hover {
+            background-color: #ddd;
+            color: black;
         }
         .form-container, .result-container {
             align-items: center;
@@ -18,8 +38,8 @@
             background-color: #f9f9f9;
         }
         #resultImage {
-        display: block;
-        margin: auto;
+            display: block;
+            margin: auto;
         }
         h1, h2 {
             text-align: center;
@@ -52,9 +72,24 @@
     </style>
 </head>
 <body>
+    <div class="navbar">
+    {% if user.is_authenticated %}
+        <a href="{% url 'user_profile' %}">{{ user.username }}</a>
+        <form id="logout-form" method="post" action="{% url 'logout' %}" style="display: none;">
+            {% csrf_token %}
+        </form>
+        <a href="#" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">Logout</a>
+
+
+    {% else %}
+        <a href="{% url 'login' %}">Sign In</a>
+        <a href="{% url 'register' %}">Sign Up</a>
+    {% endif %}
+    </div>
+
     <div class="form-container">
         <h1>Image Generation</h1>
-        <form id="imageForm" method="post">
+        <form id="imageForm" method="post" action="{% url 'image_generation' %}">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit">Generate</button>
@@ -64,8 +99,7 @@
     <div class="result-container">
         <h2>Generated Image</h2>
         <img id="resultImage" src="" alt="Generated Image" style="max-width:100%; display: none;">
-    
-        <!-- Таблица для вывода введённых значений -->
+
         <table id="inputValuesTable" style="width:100%; margin-top:20px; display:none;">
             <tr><th>Prompt</th><td id="tablePrompt"></td></tr>
             <tr><th>Negative Prompt</th><td id="tableNegativePrompt"></td></tr>
@@ -73,50 +107,51 @@
             <tr><th>Height</th><td id="tableHeight"></td></tr>
             <tr><th>Seed</th><td id="tableSeed"></td></tr>
         </table>
-    </div>    
+    </div>
 
     <script>
         document.getElementById('imageForm').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const formData = new FormData(this);
-        document.querySelector('button').disabled = true;
-        document.querySelector('button').textContent = 'Please wait...';
-        
-        // Получаем данные из формы для таблицы
-        const prompt = formData.get('prompt');
-        const negativePrompt = formData.get('negative_prompt');
-        const width = formData.get('width');
-        const height = formData.get('height');
-        const seed = formData.get('seed');
-        
-        fetch(this.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-            }
-        }).then(response => response.json())
-        .then(data => {
-            document.getElementById('resultImage').src = data.generated_image_path;
-            document.getElementById('resultImage').style.display = 'block';
+            event.preventDefault();
+            const formData = new FormData(this);
+            document.querySelector('button').disabled = true;
+            document.querySelector('button').textContent = 'Please wait...';
 
-            // Заполняем и отображаем таблицу с введёнными данными
-            document.getElementById('tablePrompt').textContent = prompt;
-            document.getElementById('tableNegativePrompt').textContent = negativePrompt;
-            document.getElementById('tableWidth').textContent = width;
-            document.getElementById('tableHeight').textContent = height;
-            document.getElementById('tableSeed').textContent = seed;
-            document.getElementById('inputValuesTable').style.display = 'table';
+            const prompt = formData.get('prompt');
+            const negativePrompt = formData.get('negative_prompt');
+            const width = formData.get('width');
+            const height = formData.get('height');
+            const seed = formData.get('seed');
 
-            document.querySelector('button').disabled = false;
-            document.querySelector('button').textContent = 'Generate';
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.querySelector('button').disabled = false;
-            document.querySelector('button').textContent = 'Generate';
+            fetch(this.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                }
+            }).then(response => response.json())
+            .then(data => {
+                if (data.generated_image_path) {
+                    document.getElementById('resultImage').src = data.generated_image_path;
+                    document.getElementById('resultImage').style.display = 'block';
+
+                    document.getElementById('tablePrompt').textContent = prompt;
+                    document.getElementById('tableNegativePrompt').textContent = negativePrompt;
+                    document.getElementById('tableWidth').textContent = width;
+                    document.getElementById('tableHeight').textContent = height;
+                    document.getElementById('tableSeed').textContent = seed;
+                    document.getElementById('inputValuesTable').style.display = 'table';
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                }
+                document.querySelector('button').disabled = false;
+                document.querySelector('button').textContent = 'Generate';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.querySelector('button').disabled = false;
+                document.querySelector('button').textContent = 'Generate';
+            });
         });
-    });
     </script>
 </body>
 </html>
