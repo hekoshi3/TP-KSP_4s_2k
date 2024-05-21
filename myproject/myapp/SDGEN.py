@@ -7,7 +7,7 @@ from datetime import datetime
 url = 'http://127.0.0.1:7860'
 t2i_url = 'http://127.0.0.1:7860/sdapi/v1/txt2img'
 
-def base64_to_image(base64_string, output_file):
+def base64_to_image(base64_string, output_file) -> None:
     """
     Decode base64 to Image. You probably don't need it
     """
@@ -16,10 +16,10 @@ def base64_to_image(base64_string, output_file):
     image = Image.open(image_buffer)
     path_out_file = pathlib.Path(output_file)
     image.save(path_out_file)
-    print(f"Saved image as {image.format.lower()} file: {path_out_file}")
-    print(image.info)
+    #print(f"Saved image as {image.format.lower()} file: {path_out_file}")
+    #print(image.info)
 
-def makeJSON(p, np, s, w, h):
+def makeJSON(p, np, s, w, h) -> json:
     """
     Make a JSON from the received data. You probably don't need it
     """
@@ -34,7 +34,7 @@ def makeJSON(p, np, s, w, h):
     "height": h
     })
 
-def CheckConnectionToServer():
+def CheckConnectionToServer() -> bool:
     """
     Check connection to SD api server:
     - returns True when: server responds
@@ -50,17 +50,18 @@ def CheckConnectionToServer():
         print(f"[{datetime.now()}] Connection error: server unavailable")
         return False
 
-def txt2img(prompt, negative_p, seed, width, height, directory):
+def txt2img(prompt, negative_p, seed, width, height, directory) -> json:
     """
     Send a POST-request to Stable diffusion.
     Returns:
-    - str path to generated image
-    - int 503 when server is unavailable
+    - json { 'info' & 'path' } to generated image
+    - json error code when server is unavailable
     """
     if (CheckConnectionToServer()):
         print("Sending POST-request...")
         print(f"send req to {t2i_url}")
-        r = requests.post(t2i_url, makeJSON(prompt, negative_p, seed, width, height), auth=("sdweb","ssdd"))
+        makedJSON = makeJSON(prompt, negative_p, seed, width, height)
+        r = requests.post(t2i_url, makedJSON, auth=("sdweb","ssdd"))
         print(f"server returns {r}")
         respond = r.json()
         if "images" in respond:
@@ -72,16 +73,21 @@ def txt2img(prompt, negative_p, seed, width, height, directory):
             out_name = f"{str(seed)}_{date}.png"
             path = directory + out_name
             base64_to_image(respond['images'][0], path)
-            return path
-    else: return 503
+            forReturn = json.dumps({
+            'info': f"{makedJSON}",
+            'path': path                
+            })
+            return forReturn
+    else: return json.dumps({'error': 503})
 
-def txt2img_TEST(directory):
+def txt2img_TEST(directory) -> json:
     """
     This method is intended for testing, it contains a pre-generated image and does not respond to any form input (just specify the directory)
     """
     if (True):
         print("Sending POST-request...")
         print(f"send req to {t2i_url}")
+        #makedJSON = makeJSON(prompt, negative_p, seed, width, height)
         #r = requests.post(t2i_url, makeJSON(prompt, negative_p, seed, width, height), auth=("sdweb","ssdd"))
         print(f"server returns <Response [200]>")
         if True == True:
@@ -93,4 +99,47 @@ def txt2img_TEST(directory):
             print(f"|{directory}{out_name}|")
             path = os.path.join(directory, out_name)
             base64_to_image(base64_data.encode('ascii'), path)
-            return path
+            forReturn = json.dumps({
+            'info': {'prompt': "test image, no any promts here"},
+            'path': path                
+            })
+            return forReturn
+        
+def getModelsList() -> json:
+    """
+    Get list of models, available for use right now
+    Returns:
+    - json {
+    "title": "string",
+    "model_name": "string",
+    "hash": "string",
+    "sha256": "string",
+    "filename": "string",
+    "config": "string"
+    }
+    - json {'error': int -> code}
+    """
+    if CheckConnectionToServer():
+        try:
+            r = requests.get(f'{url}/sdapi/v1/sd-models', auth=("sdweb","ssdd"))
+            print(r.status_code)
+            if (r.status_code) == 200:
+                respond = r.json()
+                return respond
+        except Exception as e:
+            print("Catched exception on getModelList")
+            return json.dumps({'error': 503})
+    else: return json.dumps({'error': 503})
+
+def switchModel(modelName) -> None:
+    """
+    may be dungerous, shoud grant admin permissions
+    """
+    opt = requests.get(url=f'{url}/sdapi/v1/options')
+    opt_json = opt.json()
+    opt_json['sd_model_checkpoint'] = f'{modelName}'
+    requests.post(url=f'{url}/sdapi/v1/options', json=opt_json)
+
+if __name__ == "__main__":
+    #txt2img("","",-1,512,512,'../media/generated_images/')
+    print(getModelsList())
