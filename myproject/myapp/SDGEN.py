@@ -134,15 +134,24 @@ def getModelsList() -> json:
             return json.dumps({'error': 503})
     else: return json.dumps({'error': 503})
 
-def switchModel(modelName) -> None:
+def switchModel(modelName: str) -> None:
     """
-    may be dungerous, shoud grant admin permissions
+    ok it may be ok, just print here 'model_name' or 'hash'\n
+    returns json:
+    {'result': code, 'desc': description}
     """
-    opt = requests.get(url=f'{url}/sdapi/v1/options')
-    opt_json = opt.json()
-    opt_json['sd_model_checkpoint'] = f'{modelName}'
-    requests.post(url=f'{url}/sdapi/v1/options', json=opt_json)
+    if CheckConnectionToServer():
+        try:
+            opt = requests.get(url=f'{url}/sdapi/v1/options')
+            opt_json = opt.json()
+            opt_json['sd_model_checkpoint'] = f'{modelName}'
+            requests.post(url=f'{url}/sdapi/v1/options', json=opt_json)
+            return json.dumps({'result': 200, 'desc': f"Changed model to ['{modelName}']"})
+        except Exception as e:
+            return json.dumps({'result': 503, 'desc': e})
+    else: return json.dumps({'result': 503, 'desc': 'Server unavailable'})
 
 if __name__ == "__main__":
     #txt2img("","",-1,512,512,'../media/generated_images/')
-    print(getModelsList())
+    #print(getModelsList())
+    switchModel('a074b8864e')
