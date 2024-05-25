@@ -1,34 +1,73 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <title>Register</title>
     <style>
-        /* Ваши стили */
+        /* Navbar styles */
         .navbar {
-            width: 100%;
-            display: flex;
-            justify-content: flex-end;
             background-color: #333;
-            padding: 10px;
-            margin-bottom: 20px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
-        .navbar a {
+        .navbar-list {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center; /* Center align items */
+            height: 50px; /* Ensure consistent height */
+        }
+        .navbar-item {
+            display: inline;
+        }
+        .navbar-link, .logout-button {
+            display: inline-block; /* Ensure inline-block for both links and buttons */
             color: white;
+            text-align: center;
             padding: 14px 20px;
             text-decoration: none;
-            text-align: center;
+            transition: background-color 0.3s;
         }
-        .navbar a:hover {
-            background-color: #ddd;
-            color: black;
+        .navbar-link:hover, .logout-button:hover {
+            background-color: #575757;
+        }
+        .logout-form {
+            display: inline; /* Ensure form is inline */
+            margin: 0; /* Remove margin to ensure proper alignment */
+            padding: 0; /* Remove padding to ensure proper alignment */
+        }
+        .logout-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+            padding: 14px 20px; /* Ensure same padding as links */
+            margin: 0; /* Remove margin to ensure proper alignment */
         }
     </style>
 </head>
 <body>
-    <div class="navbar">
-        <a href="{% url 'login' %}">Sign In</a>
-        <a href="{% url 'register' %}">Sign Up</a>
-    </div>
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li class="navbar-item"><a href="/" class="navbar-link">Home</a></li>
+            <li class="navbar-item"><a href="/sdgen/" class="navbar-link">Image Generation</a></li>
+            <li class="navbar-item"><a href="/gallery/" class="navbar-link">Gallery</a></li>
+            {% if user.is_authenticated %}
+                <li class="navbar-item"><a href="/profile/" class="navbar-link">Profile</a></li>
+                <li class="navbar-item">
+                    <form class="logout-form" method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-button">Logout</button>
+                    </form>
+                </li>
+            {% else %}
+                <li class="navbar-item"><a href="{% url 'login' %}" class="navbar-link">Login</a></li>
+                <li class="navbar-item"><a href="/register/" class="navbar-link">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
 
     <h1>Register</h1>
     <form method="post">

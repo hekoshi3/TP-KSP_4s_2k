@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm
+from .models import Model
 
 class RegisterForm(UserCreationForm):
     email = forms.EmailField(required=True)
@@ -16,3 +17,4 @@ class ImageGenerationForm(forms.Form):
     width = forms.IntegerField(label='Width', min_value=64, max_value=2048, required=True, initial=512)
     height = forms.IntegerField(label='Height', min_value=64, max_value=2048, required=True, initial=768)
     seed = forms.IntegerField(label='Seed', min_value=-1, initial=-1, required=True)
+    model = forms.ModelChoiceField(queryset=Model.objects.all(), label='Model')

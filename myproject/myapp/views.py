@@ -1,10 +1,10 @@
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login, authenticate, get_backends
 from django.contrib.auth.forms import UserCreationForm
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from .forms import ImageGenerationForm, RegisterForm
-from .models import Request, Model
+from .forms import ImageGenerationForm, UserCreationForm
+from .models import Request, Model, Favourite
 from . import SDGEN
 
 def register(request):
@@ -21,9 +21,15 @@ def register(request):
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
 
+
 @login_required
 def profile(request):
     user_requests = Request.objects.filter(user=request.user)
+    if request.method == 'POST':
+        request_id = request.POST.get('request_id')
+        selected_request = get_object_or_404(Request, id=request_id)
+        Favourite.objects.create(user=request.user, request=selected_request)
+        return JsonResponse({'status': 'added to favourites'})
     return render(request, 'profile.html', {'requests': user_requests})
 
 def image_generation_view(request):
@@ -35,8 +41,9 @@ def image_generation_view(request):
             width = form.cleaned_data['width']
             height = form.cleaned_data['height']
             seed = form.cleaned_data['seed']
+            model = form.cleaned_data['model']
             directory = 'media/generated_images/'
-            generated_image_path = '/' + SDGEN.txt2img_TEST(directory)#txt2img(prompt, negative_prompt, seed, width, height, directory) ##
+            generated_image_path = '/' + SDGEN.txt2img_TEST(directory)
 
             if request.user.is_authenticated:
                 Request.objects.create(
@@ -46,7 +53,8 @@ def image_generation_view(request):
                     width=width,
                     height=height,
                     seed=seed,
-                    image = generated_image_path
+                    image=generated_image_path,
+                    model=model
                 )
 
             return JsonResponse({'generated_image_path': generated_image_path})

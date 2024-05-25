@@ -1,11 +1,136 @@
-<!-- templates/profile.html -->
-
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Profile</title>
+    <meta charset="UTF-8">
+    <title>User Profile</title>
+    <style>
+        .navbar {
+            background-color: #333;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .navbar-list {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            height: 50px;
+        }
+        .navbar-item {
+            display: inline;
+        }
+        .navbar-link, .logout-button {
+            display: inline-block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .navbar-link:hover, .logout-button:hover {
+            background-color: #575757;
+        }
+        .logout-form {
+            display: inline;
+            margin: 0;
+            padding: 0;
+        }
+        .logout-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font: inherit;
+            padding: 14px 20px;
+            margin: 0;
+        }
+        .thumbnail {
+            width: 150px;
+            height: auto;
+            margin: 10px;
+            cursor: pointer;
+        }
+        .image-info {
+            display: none;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        function showInfo(id) {
+            document.getElementById('modal-' + id).style.display = 'block';
+        }
+
+        function closeInfo(id) {
+            document.getElementById('modal-' + id).style.display = 'none';
+        }
+
+        function addToFavourites(requestId) {
+            fetch('/profile/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({'request_id': requestId})
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'added to favourites') {
+                    alert('Added to favourites');
+                }
+            });
+        }
+    </script>
 </head>
 <body>
+    <nav class="navbar">
+        <ul class="navbar-list">
+            <li class="navbar-item"><a href="/" class="navbar-link">Home</a></li>
+            <li class="navbar-item"><a href="/sdgen/" class="navbar-link">Image Generation</a></li>
+            <li class="navbar-item"><a href="/gallery/" class="navbar-link">Gallery</a></li>
+            {% if user.is_authenticated %}
+                <li class="navbar-item"><a href="/profile/" class="navbar-link">Profile</a></li>
+                <li class="navbar-item">
+                    <form class="logout-form" method="post" action="{% url 'logout' %}">
+                        {% csrf_token %}
+                        <button type="submit" class="logout-button">Logout</button>
+                    </form>
+                </li>
+            {% else %}
+                <li class="navbar-item"><a href="{% url 'login' %}" class="navbar-link">Login</a></li>
+                <li class="navbar-item"><a href="/register/" class="navbar-link">Register</a></li>
+            {% endif %}
+        </ul>
+    </nav>
     <h1>Welcome, {{ user.username }}</h1>
     <p>This is your profile page.</p>
     {% if user.image %}
@@ -20,35 +145,22 @@
         <button type="submit">Update Profile</button>
     </form>
 
-    <table>
-        <thead>
-            <tr>
-                <th>Prompt</th>
-                <th>Negative Prompt</th>
-                <th>Width</th>
-                <th>Height</th>
-                <th>Seed</th>
-                <th>Image</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for request in requests %}
-                <tr>
-                    <td>{{ request.prompt }}</td>
-                    <td>{{ request.negative_prompt }}</td>
-                    <td>{{ request.width }}</td>
-                    <td>{{ request.height }}</td>
-                    <td>{{ request.seed }}</td>
-                    <td>
-                        {% if request.image %}
-                            <img src="{{ request.image.url }}" alt="Generated Image" style="max-width:100px;">
-                        {% else %}
-                            <p>No image available</p>
-                        {% endif %}
-                    </td>
-                </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <a href="{% url 'password_change' %}">Change Password</a>
+
+    <div class="gallery">
+        {% for request in requests %}
+            <img src="{{ request.image.url }}" class="thumbnail" onclick="showInfo({{ request.id }})">
+            <div id="modal-{{ request.id }}" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeInfo({{ request.id }})">&times;</span>
+                    <h2>Image Information</h2>
+                    <p>Prompt: {{ request.prompt }}</p>
+                    <p>Negative Prompt: {{ request.negative_prompt }}</p>
+                    <p>Model: {{ request.model.name }}</p>
+                    <button onclick="addToFavourites({{ request.id }})">Add to Favourites</button>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 </body>
 </html>
