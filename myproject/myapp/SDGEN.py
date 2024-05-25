@@ -52,7 +52,10 @@ def CheckConnectionToServer() -> bool:
 
 def txt2img(prompt, negative_p, seed, width, height, directory) -> json:
     """
-    Send a POST-request to Stable diffusion.
+    Send a POST-request to Stable diffusion.\n
+    Better using:
+    -- generated = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory))\n
+    then you can just use generated['info']['prompt'] etc\n
     Returns:
     - json { 'info' & 'path' } to generated image
     - json error code when server is unavailable
@@ -74,7 +77,7 @@ def txt2img(prompt, negative_p, seed, width, height, directory) -> json:
             path = directory + out_name
             base64_to_image(respond['images'][0], path)
             forReturn = json.dumps({
-            'info': f"{makedJSON}",
+            'info': json.loads(makeJSON(prompt, negative_p, seed, width, height)),
             'path': path                
             })
             return forReturn
@@ -100,7 +103,7 @@ def txt2img_TEST(directory) -> json:
             path = os.path.join(directory, out_name)
             base64_to_image(base64_data.encode('ascii'), path)
             forReturn = json.dumps({
-            'info': {'prompt': "test image, no any promts here"},
+            'info': {'prompt': "test image, no any promts here", 'seed': 1659743771},
             'path': path                
             })
             return forReturn
