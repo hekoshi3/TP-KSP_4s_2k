@@ -52,7 +52,10 @@ def CheckConnectionToServer() -> bool:
 
 def txt2img(prompt, negative_p, seed, width, height, directory) -> json:
     """
-    Send a POST-request to Stable diffusion.
+    Send a POST-request to Stable diffusion.\n
+    Better using:
+    -- generated = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory))\n
+    then you can just use generated['info']['prompt'] etc\n
     Returns:
     - json { 'info' & 'path' } to generated image
     - json error code when server is unavailable
@@ -74,7 +77,7 @@ def txt2img(prompt, negative_p, seed, width, height, directory) -> json:
             path = directory + out_name
             base64_to_image(respond['images'][0], path)
             forReturn = json.dumps({
-            'info': f"{makedJSON}",
+            'info': json.loads(makeJSON(prompt, negative_p, seed, width, height)),
             'path': path                
             })
             return forReturn
@@ -100,7 +103,7 @@ def txt2img_TEST(directory) -> json:
             path = os.path.join(directory, out_name)
             base64_to_image(base64_data.encode('ascii'), path)
             forReturn = json.dumps({
-            'info': {'prompt': "test image, no any promts here"},
+            'info': {'prompt': "test image, no any promts here", 'seed': 1659743771},
             'path': path                
             })
             return forReturn
@@ -131,15 +134,24 @@ def getModelsList() -> json:
             return json.dumps({'error': 503})
     else: return json.dumps({'error': 503})
 
-def switchModel(modelName) -> None:
+def switchModel(modelName: str) -> None:
     """
-    may be dungerous, shoud grant admin permissions
+    ok it may be ok, just print here 'model_name' or 'hash'\n
+    returns json:
+    {'result': code, 'desc': description}
     """
-    opt = requests.get(url=f'{url}/sdapi/v1/options')
-    opt_json = opt.json()
-    opt_json['sd_model_checkpoint'] = f'{modelName}'
-    requests.post(url=f'{url}/sdapi/v1/options', json=opt_json)
+    if CheckConnectionToServer():
+        try:
+            opt = requests.get(url=f'{url}/sdapi/v1/options')
+            opt_json = opt.json()
+            opt_json['sd_model_checkpoint'] = f'{modelName}'
+            requests.post(url=f'{url}/sdapi/v1/options', json=opt_json)
+            return json.dumps({'result': 200, 'desc': f"Changed model to ['{modelName}']"})
+        except Exception as e:
+            return json.dumps({'result': 503, 'desc': e})
+    else: return json.dumps({'result': 503, 'desc': 'Server unavailable'})
 
 if __name__ == "__main__":
     #txt2img("","",-1,512,512,'../media/generated_images/')
-    print(getModelsList())
+    #print(getModelsList())
+    switchModel('a074b8864e')
