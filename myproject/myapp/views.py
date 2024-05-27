@@ -3,6 +3,7 @@ from django.contrib.auth.forms import UserCreationForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+import json
 from .forms import ImageGenerationForm, UserCreationForm
 from .models import Request, Model, Favourite
 from . import SDGEN
@@ -36,15 +37,16 @@ def image_generation_view(request):
     if request.method == 'POST':
         form = ImageGenerationForm(request.POST)
         if form.is_valid():
+            directory = 'media/generated_images/'
             prompt = form.cleaned_data['prompt']
             negative_prompt = form.cleaned_data['negative_prompt']
             width = form.cleaned_data['width']
             height = form.cleaned_data['height']
             seed = form.cleaned_data['seed']
             model = form.cleaned_data['model']
-            directory = 'media/generated_images/'
-            generated_image_path = '/' + SDGEN.txt2img_TEST(directory)
-
+            print(model)
+            SDreq = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory, model)) #json.loads(SDGEN.txt2img_TEST(directory, model))
+            generated_image_path = '/' + SDreq['path']
             if request.user.is_authenticated:
                 Request.objects.create(
                     user=request.user,
@@ -52,7 +54,7 @@ def image_generation_view(request):
                     negative_prompt=negative_prompt,
                     width=width,
                     height=height,
-                    seed=seed,
+                    seed=SDreq['info']['seed'],
                     image=generated_image_path,
                     model=model
                 )

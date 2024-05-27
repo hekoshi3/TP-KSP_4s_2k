@@ -3,11 +3,10 @@ from io import BytesIO
 from PIL import Image
 from datetime import datetime
 
-
 url = 'http://127.0.0.1:7860'
 t2i_url = 'http://127.0.0.1:7860/sdapi/v1/txt2img'
 
-def base64_to_image(base64_string, output_file) -> None:
+def __base64_to_image(base64_string, output_file) -> None:
     """
     Decode base64 to Image. You probably don't need it
     """
@@ -16,10 +15,8 @@ def base64_to_image(base64_string, output_file) -> None:
     image = Image.open(image_buffer)
     path_out_file = pathlib.Path(output_file)
     image.save(path_out_file)
-    #print(f"Saved image as {image.format.lower()} file: {path_out_file}")
-    #print(image.info)
 
-def makeJSON(p, np, s, w, h) -> json:
+def __makeJSON(p, np, s, w, h) -> json:
     """
     Make a JSON from the received data. You probably don't need it
     """
@@ -40,68 +37,72 @@ def CheckConnectionToServer() -> bool:
     - returns True when: server responds
     - returns False when: server unavailable
     """
-    print("Trying connect...")
+    if __name__ == "__main__": 
+        print("Trying connect...")
     try:
         r = requests.get(f'{url}/app_id', auth=("sdweb","ssdd")) 
         if (r.status_code) == 200:
-            print("Successful Response, connection established")
+            if __name__ == "__main__": 
+                print("Successful Response, connection established")
             return True
     except requests.exceptions.RequestException as e:
-        print(f"[{datetime.now()}] Connection error: server unavailable")
+        if __name__ == "__main__": 
+            print(f"[{datetime.now()}] Connection error: server unavailable")
         return False
 
-def txt2img(prompt, negative_p, seed, width, height, directory) -> json:
+def txt2img(prompt, negative_p, seed, width, height, directory, model: str) -> json:
     """
     Send a POST-request to Stable diffusion.\n
     Better using:
-    -- generated = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory))\n
+    -- generated = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory, model/hash: str))\n
     then you can just use generated['info']['prompt'] etc\n
     Returns:
     - json { 'info' & 'path' } to generated image
     - json error code when server is unavailable
     """
     if (CheckConnectionToServer()):
-        print("Sending POST-request...")
-        print(f"send req to {t2i_url}")
-        makedJSON = makeJSON(prompt, negative_p, seed, width, height)
+        if __name__ == "__main__": 
+            print("Sending POST-request...")
+            print(f"send req to {t2i_url}")
+        switchModel(str(model))
+        makedJSON = __makeJSON(prompt, negative_p, seed, width, height)
         r = requests.post(t2i_url, makedJSON, auth=("sdweb","ssdd"))
-        print(f"server returns {r}")
         respond = r.json()
         if "images" in respond:
             match = re.search(r'"seed": (\d+)', respond['info'])
             if match:
                 seed = match.group(1)
-            print("Generation complete")
             date = datetime.now().strftime("%Y-%m-%d %H-%M")
-            out_name = f"{str(seed)}_{date}.png"
+            out_name = f"{model}_{str(seed)}_{date}.png"
+            print("Generation complete: " + out_name)
             path = directory + out_name
-            base64_to_image(respond['images'][0], path)
+            __base64_to_image(respond['images'][0], path)
             forReturn = json.dumps({
-            'info': json.loads(makeJSON(prompt, negative_p, seed, width, height)),
+            'info': json.loads(__makeJSON(prompt, negative_p, seed, width, height)),
             'path': path                
             })
             return forReturn
     else: return json.dumps({'error': 503})
 
-def txt2img_TEST(directory) -> json:
+def txt2img_TEST(directory, model) -> json:
     """
-    This method is intended for testing, it contains a pre-generated image and does not respond to any form input (just specify the directory)
+    This method is intended for testing, it contains
+    a pre-generated image and does not respond to any form input (just specify the directory and model)
     """
     if (True):
-        print("Sending POST-request...")
-        print(f"send req to {t2i_url}")
-        #makedJSON = makeJSON(prompt, negative_p, seed, width, height)
-        #r = requests.post(t2i_url, makeJSON(prompt, negative_p, seed, width, height), auth=("sdweb","ssdd"))
-        print(f"server returns <Response [200]>")
+        print("[test] Sending POST-request...")
+        print(f"[test] send req to {t2i_url}")
+        print(f"[test] server returns <Response [200]>")
         if True == True:
+            print('[test] we think that all is ok, so there is yours loaded model '+ model)
             with open(directory + "based.txt", 'r') as file:
                 base64_data = file.read().strip()
-            print("Generation complete")
             date = datetime.now().strftime("%Y-%m-%d %H-%M")
-            out_name = "1659743771_2024-04-27 20-17.png"
+            out_name = f"defaultmodel_{str(1659743771)}_{date}.png"
+            print("Generation complete: " + out_name)
             print(f"|{directory}{out_name}|")
             path = os.path.join(directory, out_name)
-            base64_to_image(base64_data.encode('ascii'), path)
+            __base64_to_image(base64_data.encode('ascii'), path)
             forReturn = json.dumps({
             'info': {'prompt': "test image, no any promts here", 'seed': 1659743771},
             'path': path                
@@ -137,7 +138,7 @@ def getModelsList() -> json:
 def switchModel(modelName: str) -> None:
     """
     ok it may be ok, just print here 'model_name' or 'hash'\n
-    returns json:
+    returns smth but you dont need that i guess:
     {'result': code, 'desc': description}
     """
     if CheckConnectionToServer():
