@@ -29,6 +29,7 @@ class Request(models.Model):
     def __str__(self):
         return f"Request by {self.user.username} with prompt: {self.prompt}"
 
+
 class Gallery(models.Model):
     image = models.ForeignKey(Request, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -40,3 +41,4 @@ class Favourite(models.Model):
 
     def __str__(self):
         return f"Favourite by {self.user.username} for request: {self.request.id}"
+

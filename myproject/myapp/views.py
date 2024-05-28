@@ -29,23 +29,23 @@ def register(request):
 def profile_view(request, user_id):
     user = get_object_or_404(User, id=user_id)
     user_requests = Request.objects.filter(user=user).order_by('-id')
-    user_favourites = Favourite.objects.filter(user=user).select_related('request')
+    user_favourites = Favourite.objects.filter(user=user).select_related('request').order_by('-id')
     return render(request, 'profile.html', {'profile_user': user, 'requests': user_requests, 'favourites': user_favourites})
 @login_required
 def profile(request):
     user_requests = Request.objects.filter(user=request.user).order_by('-id')
-    favourites = Favourite.objects.filter(user=request.user)
+    favourites = Favourite.objects.filter(user=request.user).order_by('-id')
     if request.method == 'POST':
         request_id = request.POST.get('request_id')
         favourite_id = request.POST.get('favourite_id')
         if request_id:
             selected_request = get_object_or_404(Request, id=request_id)
             Favourite.objects.create(user=request.user, request=selected_request)
-            return redirect('user_profile')
+            return redirect('redirect_to_profile')
         if favourite_id:
             favourite = get_object_or_404(Favourite, id=favourite_id, user=request.user)
             favourite.delete()
-            return redirect('user_profile')
+            return redirect('redirect_to_profile')
     return render(request, 'profile.html', {'requests': user_requests, 'favourites': favourites})
 
 @login_required
@@ -77,7 +77,7 @@ def image_generation_view(request):
             seed = form.cleaned_data['seed']
             model = form.cleaned_data['model']
             print(model)
-            SDreq = json.loads(SDGEN.txt2img_TEST(directory, model))#json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory, model))
+            SDreq = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory, model))
             generated_image_path = '/' + SDreq['path']
             if request.user.is_authenticated:
                 generated_request = Request.objects.create(
@@ -94,7 +94,8 @@ def image_generation_view(request):
 
             return JsonResponse({'generated_image_path': generated_image_path})
         else:
-            return JsonResponse({'error': 'Invalid form data'}, status=400)
+            return JsonResponse({'error': form.errors}, status=400)
     else:
         form = ImageGenerationForm()
         return render(request, 'image_generation.html', {'form': form})
+

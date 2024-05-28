@@ -114,6 +114,11 @@
             border: 1px solid #333;
             border-radius: 8px;
         }
+        .error-message {
+            color: red;
+            text-align: center;
+            margin-bottom: 20px;
+        }
 
         /* Responsive design */
         @media (max-width: 768px) {
@@ -151,6 +156,7 @@
     <div class="container">
         <div class="form-container">
             <h1>Image Generation</h1>
+            <div class="error-message" id="errorMessage" style="display: none;"></div>
             <form id="imageForm" method="post" action="{% url 'image_generation' %}">
                 {% csrf_token %}
                 {{ form.as_p }}
@@ -169,6 +175,7 @@
             event.preventDefault();
             const formData = new FormData(this);
             const generateButton = document.getElementById('generateButton');
+            const errorMessage = document.getElementById('errorMessage');
             generateButton.disabled = true;
             generateButton.textContent = 'Please wait...';
 
@@ -183,8 +190,14 @@
                 if (data.generated_image_path) {
                     document.getElementById('resultImage').src = data.generated_image_path;
                     document.getElementById('resultImage').style.display = 'block';
+                    errorMessage.style.display = 'none';
                 } else if (data.error) {
-                    alert('Error: ' + data.error);
+                    let errorMessages = '';
+                    for (let field in data.error) {
+                        errorMessages += data.error[field].join('<br>') + '<br>';
+                    }
+                    errorMessage.innerHTML = errorMessages;
+                    errorMessage.style.display = 'block';
                 }
                 generateButton.disabled = false;
                 generateButton.textContent = 'Generate';
