@@ -1,8 +1,9 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>User Profile</title>
+    <title>Profile</title>
     <style>
         .navbar {
             background-color: #333;
@@ -79,10 +80,19 @@
             font-size: 28px;
             font-weight: bold;
         }
-        .close:hover,
-        .close:focus {
+        .close:hover, .close:focus {
             color: black;
             text-decoration: none;
+            cursor: pointer;
+        }
+        .content-toggle {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .content-toggle button {
+            margin: 0 10px;
+            padding: 10px 20px;
             cursor: pointer;
         }
     </style>
@@ -95,26 +105,20 @@
             document.getElementById('modal-' + id).style.display = 'none';
         }
 
-        function addToFavourites(requestId) {
-            fetch('/profile/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                body: JSON.stringify({'request_id': requestId})
-            }).then(response => response.json()).then(data => {
-                if (data.status === 'added to favourites') {
-                    alert('Added to favourites');
-                }
-            });
+        function showHistory() {
+            document.getElementById('history').style.display = 'block';
+            document.getElementById('favourites').style.display = 'none';
+        }
+
+        function showFavourites() {
+            document.getElementById('history').style.display = 'none';
+            document.getElementById('favourites').style.display = 'block';
         }
     </script>
 </head>
 <body>
     <nav class="navbar">
         <ul class="navbar-list">
-            <li class="navbar-item"><a href="/" class="navbar-link">Home</a></li>
             <li class="navbar-item"><a href="/sdgen/" class="navbar-link">Image Generation</a></li>
             <li class="navbar-item"><a href="/gallery/" class="navbar-link">Gallery</a></li>
             {% if user.is_authenticated %}
@@ -132,24 +136,15 @@
         </ul>
     </nav>
     <h1>Welcome, {{ user.username }}</h1>
-    <p>This is your profile page.</p>
-    {% if user.image %}
-        <img src="{{ user.image.url }}" alt="Profile Image">
-    {% else %}
-        <p>No profile image available.</p>
-    {% endif %}
 
-    <form method="post" enctype="multipart/form-data">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Update Profile</button>
-    </form>
+    <div class="content-toggle">
+        <button onclick="showHistory()">Show History</button>
+        <button onclick="showFavourites()">Show Favourites</button>
+    </div>
 
-    <a href="{% url 'password_change' %}">Change Password</a>
-
-    <div class="gallery">
+    <div id="history" class="gallery">
         {% for request in requests %}
-            <img src="{{ request.image.url }}" class="thumbnail" onclick="showInfo({{ request.id }})">
+            <img src="{{ request.image.url|slice:'6:' }}" class="thumbnail" onclick="showInfo({{ request.id }})">
             <div id="modal-{{ request.id }}" class="modal">
                 <div class="modal-content">
                     <span class="close" onclick="closeInfo({{ request.id }})">&times;</span>
@@ -157,7 +152,31 @@
                     <p>Prompt: {{ request.prompt }}</p>
                     <p>Negative Prompt: {{ request.negative_prompt }}</p>
                     <p>Model: {{ request.model.name }}</p>
-                    <button onclick="addToFavourites({{ request.id }})">Add to Favourites</button>
+                    <form method="post" action="{% url 'user_profile' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="request_id" value="{{ request.id }}">
+                        <button type="submit">Add to Favourites</button>
+                    </form>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div id="favourites" class="gallery" style="display: none;">
+        {% for favourite in favourites %}
+            <img src="{{ favourite.request.image.url|slice:'6:' }}" class="thumbnail" onclick="showInfo('favourite-{{ favourite.id }}')">
+            <div id="modal-favourite-{{ favourite.id }}" class="modal">
+                <div class="modal-content">
+                    <span class="close" onclick="closeInfo('favourite-{{ favourite.id }}')">&times;</span>
+                    <h2>Image Information</h2>
+                    <p>Prompt: {{ favourite.request.prompt }}</p>
+                    <p>Negative Prompt: {{ favourite.request.negative_prompt }}</p>
+                    <p>Model: {{ favourite.request.model.name }}</p>
+                    <form method="post" action="{% url 'user_profile' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="favourite_id" value="{{ favourite.id }}">
+                        <button type="submit">Remove from Favourites</button>
+                    </form>
                 </div>
             </div>
         {% endfor %}

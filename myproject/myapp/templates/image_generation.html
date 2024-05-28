@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Page Title</title>
+    <title>Image Generation</title>
     <style>
         /* Navbar styles */
         .navbar {
@@ -46,12 +46,78 @@
             padding: 14px 20px; /* Ensure same padding as links */
             margin: 0; /* Remove margin to ensure proper alignment */
         }
+
+        /* Main container styles */
+        .container {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .form-container, .image-container {
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 45%;
+        }
+        .form-container h1, .image-container h2 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .form-container form div {
+            margin-bottom: 15px;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        .form-container textarea, .form-container select, .form-container button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-container button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px auto;
+            display: block;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .form-container, .image-container {
+                width: 90%;
+                margin-bottom: 20px;
+            }
+        }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <ul class="navbar-list">
-            <li class="navbar-item"><a href="/" class="navbar-link">Home</a></li>
             <li class="navbar-item"><a href="/sdgen/" class="navbar-link">Image Generation</a></li>
             <li class="navbar-item"><a href="/gallery/" class="navbar-link">Gallery</a></li>
             {% if user.is_authenticated %}
@@ -69,41 +135,29 @@
         </ul>
     </nav>
 
+    <div class="container">
+        <div class="form-container">
+            <h1>Image Generation</h1>
+            <form id="imageForm" method="post" action="{% url 'image_generation' %}">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" id="generateButton">Generate</button>
+            </form>
+        </div>
 
-    <div class="form-container">
-        <h1>Image Generation</h1>
-        <form id="imageForm" method="post" action="{% url 'image_generation' %}">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Generate</button>
-        </form>
-    </div>
-
-    <div class="result-container">
-        <h2>Generated Image</h2>
-        <img id="resultImage" src="" alt="Generated Image" style="max-width:100%; display: none;">
-
-        <table id="inputValuesTable" style="width:100%; margin-top:20px; display:none;">
-            <tr><th>Prompt</th><td id="tablePrompt"></td></tr>
-            <tr><th>Negative Prompt</th><td id="tableNegativePrompt"></td></tr>
-            <tr><th>Width</th><td id="tableWidth"></td></tr>
-            <tr><th>Height</th><td id="tableHeight"></td></tr>
-            <tr><th>Seed</th><td id="tableSeed"></td></tr>
-        </table>
+        <div class="image-container">
+            <h2>Generated Image</h2>
+            <img id="resultImage" src="" alt="Generated Image" style="display: none;">
+        </div>
     </div>
 
     <script>
         document.getElementById('imageForm').addEventListener('submit', function(event) {
             event.preventDefault();
             const formData = new FormData(this);
-            document.querySelector('button').disabled = true;
-            document.querySelector('button').textContent = 'Please wait...';
-
-            const prompt = formData.get('prompt');
-            const negativePrompt = formData.get('negative_prompt');
-            const width = formData.get('width');
-            const height = formData.get('height');
-            const seed = formData.get('seed');
+            const generateButton = document.getElementById('generateButton');
+            generateButton.disabled = true;
+            generateButton.textContent = 'Please wait...';
 
             fetch(this.action, {
                 method: 'POST',
@@ -116,23 +170,16 @@
                 if (data.generated_image_path) {
                     document.getElementById('resultImage').src = data.generated_image_path;
                     document.getElementById('resultImage').style.display = 'block';
-
-                    document.getElementById('tablePrompt').textContent = prompt;
-                    document.getElementById('tableNegativePrompt').textContent = negativePrompt;
-                    document.getElementById('tableWidth').textContent = width;
-                    document.getElementById('tableHeight').textContent = height;
-                    document.getElementById('tableSeed').textContent = seed;
-                    document.getElementById('inputValuesTable').style.display = 'table';
                 } else if (data.error) {
                     alert('Error: ' + data.error);
                 }
-                document.querySelector('button').disabled = false;
-                document.querySelector('button').textContent = 'Generate';
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate';
             })
             .catch(error => {
                 console.error('Error:', error);
-                document.querySelector('button').disabled = false;
-                document.querySelector('button').textContent = 'Generate';
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate';
             });
         });
     </script>

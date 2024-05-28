@@ -25,13 +25,28 @@ def register(request):
 
 @login_required
 def profile(request):
-    user_requests = Request.objects.filter(user=request.user)
+    user_requests = Request.objects.filter(user=request.user).order_by('-id')
+    favourites = Favourite.objects.filter(user=request.user)
     if request.method == 'POST':
         request_id = request.POST.get('request_id')
-        selected_request = get_object_or_404(Request, id=request_id)
-        Favourite.objects.create(user=request.user, request=selected_request)
-        return JsonResponse({'status': 'added to favourites'})
-    return render(request, 'profile.html', {'requests': user_requests})
+        favourite_id = request.POST.get('favourite_id')
+        if request_id:
+            selected_request = get_object_or_404(Request, id=request_id)
+            Favourite.objects.create(user=request.user, request=selected_request)
+            return redirect('user_profile')
+        if favourite_id:
+            favourite = get_object_or_404(Favourite, id=favourite_id, user=request.user)
+            favourite.delete()
+            return redirect('user_profile')
+    return render(request, 'profile.html', {'requests': user_requests, 'favourites': favourites})
+
+@login_required
+def remove_favourite(request):
+    if request.method == 'POST':
+        favourite_id = request.POST.get('favourite_id')
+        favourite = get_object_or_404(Favourite, id=favourite_id, user=request.user)
+        favourite.delete()
+        return JsonResponse({'status': 'removed from favourites'})
 
 def image_generation_view(request):
     if request.method == 'POST':
@@ -45,7 +60,7 @@ def image_generation_view(request):
             seed = form.cleaned_data['seed']
             model = form.cleaned_data['model']
             print(model)
-            SDreq = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory, model)) #json.loads(SDGEN.txt2img_TEST(directory, model))
+            SDreq = json.loads(SDGEN.txt2img_TEST(directory, model))#json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory, model))
             generated_image_path = '/' + SDreq['path']
             if request.user.is_authenticated:
                 Request.objects.create(

@@ -94,7 +94,7 @@ def txt2img_TEST(directory, model) -> json:
         print(f"[test] send req to {t2i_url}")
         print(f"[test] server returns <Response [200]>")
         if True == True:
-            print('[test] we think that all is ok, so there is yours loaded model '+ model)
+            print('[test] we think that all is ok, so there is yours loaded model '+ model.name)
             with open(directory + "based.txt", 'r') as file:
                 base64_data = file.read().strip()
             date = datetime.now().strftime("%Y-%m-%d %H-%M")
