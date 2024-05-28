@@ -1,6 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    profile_picture = models.ImageField(upload_to='profile_pics', blank=True, null=True)
+    bio = models.TextField(blank=True, null=True)
+
 class Model(models.Model):
     name = models.CharField(max_length=100)
     hash_value = models.CharField(max_length=64)
@@ -23,6 +28,11 @@ class Request(models.Model):
 
     def __str__(self):
         return f"Request by {self.user.username} with prompt: {self.prompt}"
+
+class Gallery(models.Model):
+    image = models.ForeignKey(Request, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    added_at = models.DateTimeField(auto_now_add=True)
 
 class Favourite(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
