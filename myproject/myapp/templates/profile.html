@@ -5,6 +5,13 @@
     <meta charset="UTF-8">
     <title>Profile</title>
     <style>
+        body {
+            background-color: #121212;
+            color: #ffffff;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
         .navbar {
             background-color: #333;
             overflow: hidden;
@@ -28,10 +35,11 @@
             text-align: center;
             padding: 14px 20px;
             text-decoration: none;
-            transition: background-color 0.3s;
+            transition: background-color 0.3s, color 0.3s;
         }
         .navbar-link:hover, .logout-button:hover {
             background-color: #575757;
+            color: white;
         }
         .logout-form {
             display: inline;
@@ -68,11 +76,12 @@
             padding-top: 60px;
         }
         .modal-content {
-            background-color: #fefefe;
+            background-color: #1f1f1f;
             margin: 5% auto;
             padding: 20px;
             border: 1px solid #888;
             width: 80%;
+            color: #ffffff;
         }
         .close {
             color: #aaa;
@@ -81,7 +90,7 @@
             font-weight: bold;
         }
         .close:hover, .close:focus {
-            color: black;
+            color: white;
             text-decoration: none;
             cursor: pointer;
         }
@@ -94,6 +103,14 @@
             margin: 0 10px;
             padding: 10px 20px;
             cursor: pointer;
+            background-color: #333;
+            color: white;
+            border: 1px solid #ffffff;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .content-toggle button:hover {
+            background-color: white;
+            color: #333;
         }
     </style>
     <script>
