@@ -72,7 +72,7 @@
             text-align: center;
             cursor: pointer;
             overflow: hidden;
-            width: var(--image-width, 300px); /* Default width */
+            width: var(--image-width, 350px); /* Default width */
             transition: width 0.3s ease;
         }
         .gallery-item img {
@@ -174,7 +174,7 @@
     <h1 style="text-align: center; margin-top: 20px;">Gallery</h1>
     <div class="slider-container">
         <label for="sizeSlider">Размер изображений:</label>
-        <input type="range" id="sizeSlider" min="100" max="600" value="300">
+        <input type="range" id="sizeSlider" min="100" max="600" value="350">
     </div>
     <div class="gallery" id="gallery">
         {% for item in gallery_items %}

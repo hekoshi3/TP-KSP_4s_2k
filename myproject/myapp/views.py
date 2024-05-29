@@ -21,7 +21,7 @@ def register(request):
             raw_password = form.cleaned_data.get('password1')
             user = authenticate(username=username, password=raw_password)
             login(request, user)
-            return redirect('user_profile')
+            return redirect('image_generation')
     else:
         form = UserCreationForm()
     return render(request, 'register.html', {'form': form})
@@ -55,6 +55,19 @@ def remove_favourite(request):
         favourite = get_object_or_404(Favourite, id=favourite_id, user=request.user)
         favourite.delete()
         return JsonResponse({'status': 'removed from favourites'})
+@login_required
+def toggle_favourite(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        request_id = data.get('request_id')
+        is_favourite = data.get('is_favourite')
+        if is_favourite:
+            Favourite.objects.filter(user=request.user, request_id=request_id).delete()
+        else:
+            Favourite.objects.create(user=request.user, request_id=request_id)
+        return JsonResponse({'success': True})
+    return JsonResponse({'success': False})
+
 
 def gallery_view(request):
     gallery_items = Gallery.objects.all().order_by('-added_at')

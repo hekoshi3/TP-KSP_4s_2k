@@ -13,6 +13,7 @@ urlpatterns = [
     path('profile/', views.redirect_to_profile, name='redirect_to_profile'),
     path('profile/<int:user_id>/', views.profile_view, name='profile_view'),
     path('user_profile/', views.profile, name='user_profile'),
+    path('profile/toggle_favourite/', views.toggle_favourite, name='toggle_favourite'),
     path('gallery/', views.gallery_view, name='gallery_view'),
     path('sdgen/', views.image_generation_view, name='image_generation'),
     path('', RedirectView.as_view(url='sdgen/', permanent=False), name='index_redirect'),

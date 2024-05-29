@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <style>
+        /* General styles */
         body {
             background-color: #121212;
             color: #ffffff;
@@ -13,49 +13,51 @@
             padding: 0;
         }
 
+        /* Navbar styles */
         .navbar {
-            background-color: #1f1f1f;
-            padding: 1rem;
+            background-color: #333;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }
         .navbar-list {
-            list-style: none;
-            display: flex;
-            gap: 1rem;
-            padding: 0;
+            list-style-type: none;
             margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center; /* Center align items */
+            height: 50px; /* Ensure consistent height */
         }
         .navbar-item {
-            position: relative;
+            display: inline;
         }
         .navbar-link, .logout-button {
-            color: #ffffff;
+            display: inline-block;
+            color: white;
+            text-align: center;
+            padding: 14px 20px;
             text-decoration: none;
-            padding: 0.5rem 1rem;
             transition: background-color 0.3s, color 0.3s;
-            border: none;
-            background: none;
-            cursor: pointer;
         }
         .navbar-link:hover, .logout-button:hover {
-            background-color: #333333;
-            color: #ffffff;
+            background-color: #575757;
+            color: white;
         }
         .logout-form {
             display: inline;
+            margin: 0;
+            padding: 0;
         }
-        button {
-            background-color: #1f1f1f;
-            color: #ffffff;
-            border: 1px solid #ffffff;
-            padding: 0.5rem 1rem;
+        .logout-button {
+            background: none;
+            border: none;
             cursor: pointer;
-            transition: background-color 0.3s, color 0.3s;
-        }
-        button:hover {
-            background-color: #333333;
-            color: #ffffff;
+            font: inherit;
+            padding: 14px 20px;
+            margin: 0;
         }
 
+        /* Form styles */
         form {
             background-color: #1f1f1f;
             padding: 20px;
@@ -66,25 +68,41 @@
         }
         form h1 {
             margin-bottom: 20px;
+            color: #ffffff;
+            text-align: center;
+        }
+        form label {
+            display: block;
+            margin-bottom: 5px;
+            color: #bbbbbb;
+        }
+        form input, form select, form textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 4px;
+            box-sizing: border-box;
+            background-color: #333;
+            color: #ffffff;
+            margin-bottom: 15px;
         }
         form button {
             background-color: #333;
-            color: #ffffff;
-            border: none;
-            padding: 10px 20px;
+            color: white;
+            border: 1px solid #ffffff;
             cursor: pointer;
-            transition: background-color 0.3s;
+            padding: 10px 20px;
+            transition: background-color 0.3s, color 0.3s;
         }
         form button:hover {
-            background-color: #575757;
-            color: #ffffff;
+            background-color: white;
+            color: #333;
         }
     </style>
 </head>
 <body>
     <nav class="navbar">
         <ul class="navbar-list">
-            <li class="navbar-item"><a href="/" class="navbar-link">Home</a></li>
             <li class="navbar-item"><a href="/sdgen/" class="navbar-link">Image Generation</a></li>
             <li class="navbar-item"><a href="/gallery/" class="navbar-link">Gallery</a></li>
             {% if user.is_authenticated %}
@@ -102,13 +120,11 @@
         </ul>
     </nav>
 
-    <div style="padding: 20px;">
+    <form method="post">
         <h1>Login</h1>
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Login</button>
-        </form>
-    </div>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Login</button>
+    </form>
 </body>
 </html>
