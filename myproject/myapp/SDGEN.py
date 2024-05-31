@@ -3,8 +3,9 @@ from io import BytesIO
 from PIL import Image
 from datetime import datetime
 
-url = 'http://127.0.0.1:7860'
-t2i_url = 'http://127.0.0.1:7860/sdapi/v1/txt2img'
+address ='spoons.su' 
+url = f'http://{address}:7860'
+t2i_url = f'http://{address}:7860/sdapi/v1/txt2img'
 
 def __base64_to_image(base64_string, output_file) -> None:
     """
