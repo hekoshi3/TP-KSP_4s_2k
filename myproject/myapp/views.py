@@ -11,6 +11,7 @@ from . import SDGEN
 @login_required
 def redirect_to_profile(request):
     return redirect('profile_view', user_id=request.user.id)
+
 def register(request):
     if request.method == 'POST':
         form = UserCreationForm(request.POST)
@@ -31,6 +32,7 @@ def profile_view(request, user_id):
     user_requests = Request.objects.filter(user=user).order_by('-id')
     user_favourites = Favourite.objects.filter(user=user).select_related('request').order_by('-id')
     return render(request, 'profile.html', {'profile_user': user, 'requests': user_requests, 'favourites': user_favourites})
+
 @login_required
 def profile(request):
     user_requests = Request.objects.filter(user=request.user).order_by('-id')
@@ -48,13 +50,7 @@ def profile(request):
             return redirect('redirect_to_profile')
     return render(request, 'profile.html', {'requests': user_requests, 'favourites': favourites})
 
-@login_required
-def remove_favourite(request):
-    if request.method == 'POST':
-        favourite_id = request.POST.get('favourite_id')
-        favourite = get_object_or_404(Favourite, id=favourite_id, user=request.user)
-        favourite.delete()
-        return JsonResponse({'status': 'removed from favourites'})
+
 @login_required
 def toggle_favourite(request):
     if request.method == 'POST':
@@ -111,4 +107,6 @@ def image_generation_view(request):
     else:
         form = ImageGenerationForm()
         return render(request, 'image_generation.html', {'form': form})
+
+
 
