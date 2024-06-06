@@ -280,3 +280,9 @@ function addImageToFavourites(imageId) {
     }
 }
 
+document.addEventListener('DOMContentLoaded', function() {
+    var generatedImagePath = document.getElementById('resultImage').getAttribute('src');
+    if (generatedImagePath) {
+        document.getElementById('resultImage').style.display = 'block';
+    }
+});

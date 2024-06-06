@@ -7,6 +7,7 @@ import json
 from .forms import ImageGenerationForm, UserCreationForm
 from .models import Request, Model, Favourite, Profile, Gallery
 from . import SDGEN
+from django.core.cache import cache
 
 @login_required
 def redirect_to_profile(request):
@@ -85,9 +86,9 @@ def image_generation_view(request):
             height = form.cleaned_data['height']
             seed = form.cleaned_data['seed']
             model = form.cleaned_data['model']
-            print(model)
             SDreq = json.loads(SDGEN.txt2img(prompt, negative_prompt, seed, width, height, directory, model))
             generated_image_path = '/' + SDreq['path']
+
             if request.user.is_authenticated:
                 generated_request = Request.objects.create(
                     user=request.user,
@@ -101,12 +102,17 @@ def image_generation_view(request):
                 )
                 Gallery.objects.create(user=request.user, image=generated_request)
 
+            # Сохранение пути к изображению в кэше
+            cache_key = f'generated_image_{request.user.id}'
+            cache.set(cache_key, generated_image_path, timeout=None)
+
             return JsonResponse({'generated_image_path': generated_image_path})
         else:
             return JsonResponse({'error': form.errors}, status=400)
     else:
         form = ImageGenerationForm()
-        return render(request, 'image_generation.html', {'form': form})
+        # Получение пути к изображению из кэша
+        cache_key = f'generated_image_{request.user.id}'
+        generated_image_path = cache.get(cache_key, '')
 
-
-
+        return render(request, 'image_generation.html', {'form': form, 'generated_image_path': generated_image_path})
